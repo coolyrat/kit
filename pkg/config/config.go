@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/coolyrat/kit/constant"
+	constant2 "github.com/coolyrat/kit/pkg/constant"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/env"
@@ -26,8 +26,8 @@ type configFactory struct {
 
 func NewConfigFactory() *configFactory {
 	return &configFactory{
-		configFileEnv: GetEnv(constant.ConfigFileEnv),
-		appEnv:        GetEnv(constant.AppEnv),
+		configFileEnv: GetEnv(constant2.ConfigFileEnv),
+		appEnv:        GetEnv(constant2.AppEnv),
 	}
 }
 
@@ -36,28 +36,31 @@ func (cf *configFactory) Load() {
 
 	confFile := cf.getConfigFile()
 	if err := k.Load(file.Provider(confFile), yaml.Parser()); err != nil {
-		panic(fmt.Errorf("failed to load config file %s: %w", confFile, err))
+		panic(fmt.Errorf("failed to load config from file %s: %w", confFile, err))
 	}
 
-	k.Load(env.Provider(EnvPrefix, ".", func(s string) string {
+	cb := func(s string) string {
 		return strings.Replace(strings.ToLower(
 			strings.TrimPrefix(s, EnvPrefix)), "_", ".", -1)
-	}), nil)
+	}
+	if err := k.Load(env.Provider(EnvPrefix, ".", cb), nil); err != nil {
+		panic(fmt.Errorf("failed to load config env with prefix %s: %w", EnvPrefix, err))
+	}
 
 	k.Print()
 }
 
 func (cf *configFactory) getConfigFile() string {
-	if f := GetEnv(constant.ConfigFileEnv); f != "" {
+	if f := GetEnv(constant2.ConfigFileEnv); f != "" {
 		return f
 	}
 
 	if cf.appEnv == "" {
-		return constant.DefaultConfigFile
+		return constant2.DefaultConfigFile
 	}
 
 	return fmt.Sprintf("%s.%s.%s",
-		filepath.Base(constant.DefaultConfigFile),
+		filepath.Base(constant2.DefaultConfigFile),
 		cf.appEnv,
-		filepath.Ext(constant.DefaultConfigFile))
+		filepath.Ext(constant2.DefaultConfigFile))
 }

@@ -4,6 +4,9 @@ application:
   mode: "server"
   env: "dev"
 
+config-center:
+
+
 logger:
   zap:
     level: "debug"
