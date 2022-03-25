@@ -5,11 +5,15 @@ application:
   env: "dev"
 
 config-center:
-  namespace: "kit-dev"
-  username: "kit-dev"
-  password: "kit-dev"
-  endpoints:
-    - "127.0.0.1:8848"
+  nacos:
+    endpoint: "127.0.0.1:8848"
+    namespace: "kit-dev"
+    username: "kit-dev"
+    password: "kit-dev"
+    configs:
+      kit:
+        - application
+        - logger
 
 logger:
   zap:

@@ -11,8 +11,8 @@ import (
 
 func TestNewConfigFactory(t *testing.T) {
 	clientConfig := *constant.NewClientConfig(
-		constant.WithUsername("kit-dev"),    // When namespace is public, fill in the blank string here.
-		constant.WithPassword("kit-dev"),    // When namespace is public, fill in the blank string here.
+		constant.WithUsername("kit-dev"),
+		constant.WithPassword("kit-dev"),
 		constant.WithNamespaceId("kit-dev"), // When namespace is public, fill in the blank string here.
 		constant.WithTimeoutMs(5000),
 		constant.WithNotLoadCacheAtStart(true),
