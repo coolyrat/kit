@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	constant2 "github.com/coolyrat/kit/pkg/constant"
+	"github.com/coolyrat/kit/pkg/constant"
 	"github.com/coolyrat/kit/pkg/koanf/providers/nacos"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
@@ -27,8 +27,8 @@ type configFactory struct {
 
 func NewConfigFactory() *configFactory {
 	return &configFactory{
-		configFileEnv: GetEnv(constant2.ConfigFileEnv),
-		appEnv:        GetEnv(constant2.AppEnv),
+		configFileEnv: GetEnv(constant.ConfigFileEnv),
+		appEnv:        GetEnv(constant.AppEnv),
 	}
 }
 
@@ -70,16 +70,16 @@ func (cf *configFactory) Load() {
 }
 
 func (cf *configFactory) getConfigFile() string {
-	if f := GetEnv(constant2.ConfigFileEnv); f != "" {
+	if f := GetEnv(constant.ConfigFileEnv); f != "" {
 		return f
 	}
 
 	if cf.appEnv == "" {
-		return constant2.DefaultConfigFile
+		return constant.DefaultConfigFile
 	}
 
 	return fmt.Sprintf("%s.%s.%s",
-		filepath.Base(constant2.DefaultConfigFile),
+		filepath.Base(constant.DefaultConfigFile),
 		cf.appEnv,
-		filepath.Ext(constant2.DefaultConfigFile))
+		filepath.Ext(constant.DefaultConfigFile))
 }
