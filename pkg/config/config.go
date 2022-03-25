@@ -57,7 +57,7 @@ func (cf *configFactory) Load() {
 			panic(fmt.Errorf("failed to unmarshal nacos config: %w", err))
 		}
 
-		p, err := nacos.Prodiver(&conf)
+		p, err := nacos.Provider(&conf)
 		if err != nil {
 			panic(fmt.Errorf("failed to create nacos provider: %w", err))
 		}

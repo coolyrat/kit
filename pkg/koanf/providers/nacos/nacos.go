@@ -66,6 +66,10 @@ func (c *Config) build() (*Nacos, error) {
 	}, nil
 }
 
+func Provider(config *Config) (*Nacos, error) {
+	return config.build()
+}
+
 type Nacos struct {
 	client  config_client.IConfigClient
 	configs map[string][]string
@@ -83,22 +87,18 @@ func (n *Nacos) Read() (map[string]interface{}, error) {
 				Group:  group,
 				DataId: dataId})
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to get config from nacos group=%s dataId=%s: %w", group, dataId, err)
 			}
 
 			var result map[string]interface{}
 			if err := yaml.Unmarshal([]byte(data), &result); err != nil {
-				return nil, fmt.Errorf("unmarshal yaml error: %s", err)
+				return nil, fmt.Errorf("failed to unmarshal from nacos group=%s dataId=%s: %s", group, dataId, err)
 			}
 			if err := mergo.Merge(&n.result, result); err != nil {
-				return nil, fmt.Errorf("merge result error: %s", err)
+				return nil, fmt.Errorf("failed to merge config group=%s dataId=%s: %s", group, dataId, err)
 			}
 		}
 	}
 
 	return n.result, nil
-}
-
-func Prodiver(config *Config) (*Nacos, error) {
-	return config.build()
 }
