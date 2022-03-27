@@ -2,84 +2,42 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/coolyrat/kit/pkg/constant"
 	"github.com/coolyrat/kit/pkg/koanf/providers/nacos"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/env"
-	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/providers/rawbytes"
 )
 
-var EnvPrefix = "KIT_"
+// var Config = NewConfigFactory().Load()
 
-func GetEnv(key string) string {
-	return os.Getenv(EnvPrefix + strings.ToUpper(key))
+type config struct {
+	*koanf.Koanf
+	watchers map[string]*WatchedConfig
+	changes  chan *nacos.Changes
 }
 
-type configFactory struct {
-	configFileEnv string
-	appEnv        string
-}
-
-func NewConfigFactory() *configFactory {
-	return &configFactory{
-		configFileEnv: GetEnv(constant.ConfigFileEnv),
-		appEnv:        GetEnv(constant.AppEnv),
-	}
-}
-
-func (cf *configFactory) Load() {
-	var k = koanf.New(".")
-
-	// Load config file
-	confFile := cf.getConfigFile()
-	if err := k.Load(file.Provider(confFile), yaml.Parser()); err != nil {
-		panic(fmt.Errorf("failed to load config from file %s: %w", confFile, err))
-	}
-
-	// Load config from environment variables
-	cb := func(s string) string {
-		return strings.Replace(strings.ToLower(
-			strings.TrimPrefix(s, EnvPrefix)), "_", ".", -1)
-	}
-	if err := k.Load(env.Provider(EnvPrefix, ".", cb), nil); err != nil {
-		panic(fmt.Errorf("failed to load config env with prefix %s: %w", EnvPrefix, err))
-	}
-
-	// Load config from config center
-	if k.Exists(CenterNacosPath) {
-		var conf nacos.Config
-		if err := k.UnmarshalWithConf(CenterNacosPath, &conf, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
-			panic(fmt.Errorf("failed to unmarshal nacos config: %w", err))
+func (c *config) WatchChange() {
+	go func() {
+		fmt.Println("start watching")
+		for change := range c.changes {
+			fmt.Println("WatchChange", change)
+			// group, dataId, koanf
+			k := koanf.New(".")
+			k.Load(rawbytes.Provider([]byte(change.Data)), yaml.Parser())
+			c.Koanf.Merge(k)
+			c.Koanf.Print()
 		}
-
-		p, err := nacos.Provider(&conf)
-		if err != nil {
-			panic(fmt.Errorf("failed to create nacos provider: %w", err))
-		}
-		if err := k.Load(p, nil); err != nil {
-			panic(fmt.Errorf("failed to load configs from nacos: %w", err))
-		}
-	}
-
-	k.Print()
+		fmt.Println("stop watching")
+	}()
 }
 
-func (cf *configFactory) getConfigFile() string {
-	if f := GetEnv(constant.ConfigFileEnv); f != "" {
-		return f
-	}
+func (c *config) RegisterWatcher(key string, fn func()) {
+	// c.watchers[key] = append(c.watchers[key], fn)
+}
 
-	if cf.appEnv == "" {
-		return constant.DefaultConfigFile
-	}
-
-	return fmt.Sprintf("%s.%s.%s",
-		filepath.Base(constant.DefaultConfigFile),
-		cf.appEnv,
-		filepath.Ext(constant.DefaultConfigFile))
+type WatchedConfig struct {
+	*koanf.Koanf
+	key string
+	fn  func()
 }

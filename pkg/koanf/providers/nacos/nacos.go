@@ -15,12 +15,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Changes struct {
+	Group, DataID, Data string
+}
+
 type Config struct {
 	Endpoint  string              `yaml:"endpoint" validate:"required,hostname_port"`
 	Namespace string              `yaml:"namespace" validate:"required"`
 	Username  string              `yaml:"username"`
 	Password  string              `yaml:"password" validate:"required_with=Username"`
 	Configs   map[string][]string `yaml:"configs" validate:"required"`
+	Changes   chan *Changes
 }
 
 func (c *Config) build() (*Nacos, error) {
@@ -63,6 +68,7 @@ func (c *Config) build() (*Nacos, error) {
 		client:  client,
 		configs: c.Configs,
 		result:  make(map[string]interface{}),
+		changes: c.Changes,
 	}, nil
 }
 
@@ -74,6 +80,7 @@ type Nacos struct {
 	client  config_client.IConfigClient
 	configs map[string][]string
 	result  map[string]interface{}
+	changes chan *Changes
 }
 
 func (n *Nacos) ReadBytes() ([]byte, error) {
@@ -97,6 +104,23 @@ func (n *Nacos) Read() (map[string]interface{}, error) {
 			if err := mergo.Merge(&n.result, result); err != nil {
 				return nil, fmt.Errorf("failed to merge config group=%s dataId=%s: %s", group, dataId, err)
 			}
+
+			err = n.client.ListenConfig(vo.ConfigParam{
+				DataId: dataId,
+				Group:  group,
+				OnChange: func(namespace, group, dataId, data string) {
+					fmt.Println("onchange group:" + group + ", dataId:" + dataId + ", data:" + data)
+					n.changes <- &Changes{
+						Group:  group,
+						DataID: dataId,
+						Data:   data,
+					}
+				},
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to listen config from nacos group=%s dataId=%s: %w", group, dataId, err)
+			}
+
 		}
 	}
 
