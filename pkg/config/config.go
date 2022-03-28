@@ -22,9 +22,11 @@ func (c *config) WatchChange() {
 		fmt.Println("start watching")
 		for change := range c.changes {
 			fmt.Println("WatchChange", change)
-			// group, dataId, koanf
+			// group, dataId, koanf, configPath
 			k := koanf.New(".")
 			k.Load(rawbytes.Provider([]byte(change.Data)), yaml.Parser())
+			fmt.Println(k.Keys())
+			fmt.Println(k.KeyMap())
 			c.Koanf.Merge(k)
 			c.Koanf.Print()
 		}
