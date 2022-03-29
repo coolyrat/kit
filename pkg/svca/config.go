@@ -1,6 +1,7 @@
 package svca
 
 var configPath = "service.a"
+var dataID = "svc_a"
 
 type Config struct {
 	Enable bool

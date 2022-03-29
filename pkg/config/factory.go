@@ -65,7 +65,7 @@ func (cf *configFactory) Load() *config {
 
 	c := &config{
 		Koanf:    k,
-		watchers: map[string]*WatchedConfig{},
+		watchers: make(watchers),
 		changes:  ch,
 	}
 	c.WatchChange()

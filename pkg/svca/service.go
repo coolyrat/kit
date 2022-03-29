@@ -1,20 +1,21 @@
 package svca
 
+import "github.com/coolyrat/kit/pkg/config"
+
 type service struct {
 	config *Config
 }
 
-// func NewService() *service {
-// 	var c Config
-// 	err := config.Config.Unmarshal(configPath, &c)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	config.Config.RegisterWatcher(configPath, func(v interface{}) {
-// 		err := config.Config.Unmarshal(configPath, &c)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	})
-// 	return &service{config: &c}
-// }
+func NewService() *service {
+	var c Config
+	loadConfig := func() {
+		config.Config.Koanf.Print()
+		err := config.Config.Unmarshal(configPath, &c)
+		if err != nil {
+			panic(err)
+		}
+	}
+	loadConfig()
+	config.Config.RegisterWatcher(dataID, loadConfig)
+	return &service{config: &c}
+}
