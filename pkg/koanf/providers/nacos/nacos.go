@@ -109,7 +109,6 @@ func (n *Nacos) Read() (map[string]interface{}, error) {
 				DataId: dataId,
 				Group:  group,
 				OnChange: func(namespace, group, dataId, data string) {
-					fmt.Println("onchange group:" + group + ", dataId:" + dataId + ", data:" + data)
 					n.changes <- &Changes{
 						Group:  group,
 						DataID: dataId,

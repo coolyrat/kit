@@ -61,8 +61,6 @@ func (cf *configFactory) Load() *config {
 		}
 	}
 
-	k.Print()
-
 	c := &config{
 		Koanf:    k,
 		watchers: make(watchers),

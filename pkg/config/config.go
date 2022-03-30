@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/coolyrat/kit/pkg/koanf/providers/nacos"
+	"github.com/coolyrat/kit/pkg/logr"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/rawbytes"
@@ -18,12 +19,12 @@ type config struct {
 func (c *config) WatchChange() {
 	go func() {
 		for change := range c.changes {
-			// group, dataId, koanf, configPath
 			k := koanf.New(".")
+			// TODO add error handling
 			k.Load(rawbytes.Provider([]byte(change.Data)), yaml.Parser())
 			c.Koanf.Merge(k)
 			c.NotifyWatchers(change.DataID)
-			c.Koanf.Print()
+			logr.Info("config changed", "config", k.Sprint())
 		}
 	}()
 }

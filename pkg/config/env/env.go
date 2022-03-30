@@ -5,15 +5,18 @@ import (
 	"strings"
 )
 
+const Prefix = "ENV_PREFIX"
+
+// env with prefix
 const (
 	AppEnv        = "ENV"
 	ConfigFileEnv = "CONFIG_FILE"
 )
 
-var Prefix = "KIT_"
+var prefix = prefixEnv()
 
 func GetEnv(key string) string {
-	return os.Getenv(Prefix + strings.ToUpper(key))
+	return os.Getenv(prefix + strings.ToUpper(key))
 }
 
 func GetEnvDefault(key, d string) string {
@@ -21,4 +24,12 @@ func GetEnvDefault(key, d string) string {
 		return v
 	}
 	return d
+}
+
+func prefixEnv() string {
+	if p := os.Getenv(Prefix); p != "" {
+		return p
+	}
+
+	return "KIT_"
 }
