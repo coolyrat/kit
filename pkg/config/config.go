@@ -1,49 +1,39 @@
 package config
 
 import (
-	"github.com/coolyrat/kit/pkg/koanf/providers/nacos"
-	"github.com/coolyrat/kit/pkg/logr"
+	"fmt"
+
+	"github.com/coolyrat/kit/pkg/config/configcenter"
 	"github.com/knadh/koanf"
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/rawbytes"
+	"github.com/mitchellh/mapstructure"
 )
 
-var Config = NewConfigFactory().Load()
+var conf = NewConfigFactory().Load()
 
 type config struct {
 	*koanf.Koanf
-	watchers watchers
-	changes  chan *nacos.Changes
+	configCenter configcenter.ConfigCenter
 }
 
-func (c *config) WatchChange() {
-	go func() {
-		for change := range c.changes {
-			k := koanf.New(".")
-			// TODO add error handling
-			k.Load(rawbytes.Provider([]byte(change.Data)), yaml.Parser())
-			c.Koanf.Merge(k)
-			c.NotifyWatchers(change.DataID)
-			logr.Info("config changed", "config", k.Sprint())
-		}
-	}()
+func RegisterWatcher(dataID string, cb func()) {
+	conf.configCenter.RegisterWatcher(dataID, cb)
 }
 
-func (c *config) RegisterWatcher(dataID string, cb func()) {
-	if s, ok := c.watchers[dataID]; ok {
-		c.watchers[dataID] = append(s, cb)
-	} else {
-		c.watchers[dataID] = []func(){cb}
-	}
+func Unmarshal(path string, v interface{}) error {
+	fmt.Println(conf.String(path))
+	return conf.UnmarshalWithConf(path, v, koanf.UnmarshalConf{
+		Tag:       "yaml",
+		FlatPaths: false,
+		DecoderConfig: &mapstructure.DecoderConfig{
+			DecodeHook: mapstructure.ComposeDecodeHookFunc(
+				mapstructure.StringToTimeDurationHookFunc(), mapstructure.TextUnmarshallerHookFunc()),
+			Metadata:         nil,
+			Result:           v,
+			WeaklyTypedInput: true,
+		},
+	})
 }
 
-func (c *config) NotifyWatchers(dataID string) {
-	if s, ok := c.watchers[dataID]; ok {
-		for _, cb := range s {
-			cb()
-		}
-	}
+func Print() {
+	conf.Print()
 }
-
-// watchers contains a list of callbacks for a DataID
-type watchers map[string][]func()

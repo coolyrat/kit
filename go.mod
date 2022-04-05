@@ -6,6 +6,7 @@ require (
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/imdario/mergo v0.3.12
 	github.com/knadh/koanf v1.4.0
+	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nacos-group/nacos-sdk-go v1.1.1
 	go.uber.org/zap v1.21.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
@@ -22,7 +23,6 @@ require (
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect

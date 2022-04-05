@@ -3,31 +3,22 @@ package logr
 import (
 	"fmt"
 	"sync"
-	"time"
 
+	"github.com/coolyrat/kit/pkg/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 type Config = zap.Config
 
-func init() {
-	logger, _ := zap.NewProduction()
-	defer logger.Sync() // flushes buffer, if any
-	sugar := logger.Sugar()
-	sugar.With("hello", "world",
-		zap.Stack("stack"),
-	).Infow("failed to fetch URL",
-		// Structured context as loosely typed key-value pairs.
-		"attempt", 3,
-		"backoff", time.Second,
-	)
-}
+const (
+	dataID     = "logger"
+	configPath = "logger"
+)
 
-type logr struct {
-	Logger
-}
-
+// TODO 如果一个包使用了logr，那将必定先初始化config，因为logr引用了config，也就是说，必定是使用读完配置
+// 以后初始化的logr。只要config不引用logger就不会循环引用。
+// 如要要用config，可以考虑在config里面创建一个子包再引用
 func InitLogger(conf *Config) *logr {
 	if conf == nil {
 		conf = &zap.Config{
@@ -45,12 +36,33 @@ func InitLogger(conf *Config) *logr {
 		panic(fmt.Errorf("failed to initialize logger: %v", err))
 	}
 
-	return &logr{zLogr.Sugar()}
+	return &logr{
+		SugaredLogger: zLogr.Sugar(),
+	}
 }
 
-func (l *logr) Reload(conf *Config) {
+func reload() {
+	var conf Config
+	if err := config.Unmarshal(configPath, &conf); err != nil {
+		logger.Error(err)
+	}
+
 	var mutex sync.Mutex
 	mutex.Lock()
 	defer mutex.Unlock()
-	l = InitLogger(conf)
+
+	logger = InitLogger(&conf)
+}
+
+func init() {
+	config.RegisterWatcher(dataID, reload)
+	reload()
+}
+
+type logr struct {
+	*zap.SugaredLogger
+}
+
+func (l *logr) Named(name string) Logger {
+	return &logr{SugaredLogger: l.SugaredLogger.Named(name)}
 }

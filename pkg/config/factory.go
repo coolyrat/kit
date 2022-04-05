@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/coolyrat/kit/pkg/config/configcenter"
 	"github.com/coolyrat/kit/pkg/config/env"
-	"github.com/coolyrat/kit/pkg/koanf/providers/nacos"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	koanfEnv "github.com/knadh/koanf/providers/env"
@@ -27,7 +27,6 @@ func NewConfigFactory() *configFactory {
 
 func (cf *configFactory) Load() *config {
 	var k = koanf.New(".")
-	ch := make(chan *nacos.Changes, 1)
 
 	// Load config file
 	confFile := cf.getConfigFile()
@@ -45,35 +44,19 @@ func (cf *configFactory) Load() *config {
 	}
 
 	// Load config from config center
-	if k.Exists(CenterNacosPath) {
-		var conf nacos.Config
-		conf.Changes = ch
-		if err := k.UnmarshalWithConf(CenterNacosPath, &conf, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
-			panic(fmt.Errorf("failed to unmarshal nacos config: %w", err))
-		}
-
-		p, err := nacos.Provider(&conf)
-		if err != nil {
-			panic(fmt.Errorf("failed to create nacos provider: %w", err))
-		}
-		if err := k.Load(p, nil); err != nil {
-			panic(fmt.Errorf("failed to load configs from nacos: %w", err))
-		}
-	}
+	configCenter := configcenter.Init(k)
 
 	c := &config{
-		Koanf:    k,
-		watchers: make(watchers),
-		changes:  ch,
+		configCenter: configCenter,
+		Koanf:        k,
 	}
-	c.WatchChange()
 
 	return c
 }
 
 func (cf *configFactory) getConfigFile() string {
-	if f := env.GetEnv(env.ConfigFileEnv); f != "" {
-		return f
+	if cf.configFileEnv != "" {
+		return cf.configFileEnv
 	}
 
 	if cf.appEnv == "" {

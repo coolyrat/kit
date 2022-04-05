@@ -1,15 +1,15 @@
-package svca
+package main
 
 import (
-	"testing"
 	"time"
 
 	"github.com/coolyrat/kit/pkg/config"
 	"github.com/coolyrat/kit/pkg/logr"
+	"github.com/coolyrat/kit/pkg/svca"
 )
 
-func TestService(t *testing.T) {
-	NewService()
+func main() {
+	svca.NewService()
 	for {
 		config.Print()
 		logr.Info("hello")

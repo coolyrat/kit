@@ -1,21 +1,25 @@
 package svca
 
-import "github.com/coolyrat/kit/pkg/config"
+import (
+	"github.com/coolyrat/kit/pkg/config"
+	"github.com/coolyrat/kit/pkg/logr"
+)
 
 type service struct {
 	config *Config
 }
 
 func NewService() *service {
+	logr.Info("loading svc a")
 	var c Config
 	loadConfig := func() {
-		config.Config.Koanf.Print()
-		err := config.Config.Unmarshal(configPath, &c)
+		config.Print()
+		err := config.Unmarshal(configPath, &c)
 		if err != nil {
 			panic(err)
 		}
 	}
 	loadConfig()
-	config.Config.RegisterWatcher(dataID, loadConfig)
+	config.RegisterWatcher(dataID, loadConfig)
 	return &service{config: &c}
 }

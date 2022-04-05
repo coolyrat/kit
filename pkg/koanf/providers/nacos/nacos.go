@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/imdario/mergo"
+	"github.com/knadh/koanf"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
@@ -20,12 +21,13 @@ type Changes struct {
 }
 
 type Config struct {
+	Koanf *koanf.Koanf
+
 	Endpoint  string              `yaml:"endpoint" validate:"required,hostname_port"`
 	Namespace string              `yaml:"namespace" validate:"required"`
 	Username  string              `yaml:"username"`
 	Password  string              `yaml:"password" validate:"required_with=Username"`
 	Configs   map[string][]string `yaml:"configs" validate:"required"`
-	Changes   chan *Changes
 }
 
 func (c *Config) build() (*Nacos, error) {
@@ -65,10 +67,12 @@ func (c *Config) build() (*Nacos, error) {
 	}
 
 	return &Nacos{
-		client:  client,
-		configs: c.Configs,
-		result:  make(map[string]interface{}),
-		changes: c.Changes,
+		koanf:    c.Koanf,
+		client:   client,
+		configs:  c.Configs,
+		result:   make(map[string]interface{}),
+		watchers: make(watchers),
+		changes:  make(chan *Changes, 1),
 	}, nil
 }
 
@@ -77,10 +81,13 @@ func Provider(config *Config) (*Nacos, error) {
 }
 
 type Nacos struct {
+	koanf   *koanf.Koanf
 	client  config_client.IConfigClient
 	configs map[string][]string
 	result  map[string]interface{}
-	changes chan *Changes
+
+	watchers watchers
+	changes  chan *Changes
 }
 
 func (n *Nacos) ReadBytes() ([]byte, error) {

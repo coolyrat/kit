@@ -2,7 +2,6 @@ package logr
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"go.uber.org/zap/zapcore"
@@ -41,11 +40,6 @@ func consoleEncoderConfig() zapcore.EncoderConfig {
 		EncodeTime:     CustomTimeEncoder,
 		EncodeDuration: zapcore.MillisDurationEncoder,
 		EncodeName: func(s string, encoder zapcore.PrimitiveArrayEncoder) {
-
-			ss := strings.Split(s, ".")
-			if len(ss) > 1 {
-				s = ss[len(ss)-1]
-			}
 			encoder.AppendString(fmt.Sprintf("[%-10v]", s))
 		},
 		EncodeCaller: func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {

@@ -42,7 +42,15 @@ func Fatalf(format string, args ...interface{}) {
 	logger.Fatalf(format, args...)
 }
 
+func Named(name string) Logger {
+	return &logr{
+		SugaredLogger: logger.SugaredLogger.Named(name),
+	}
+}
+
 type Logger interface {
+	Named(string) Logger
+
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 
