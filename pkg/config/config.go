@@ -37,3 +37,7 @@ func Unmarshal(path string, v interface{}) error {
 func Print() {
 	conf.Print()
 }
+
+func GetString(path string) string {
+	return conf.String(path)
+}

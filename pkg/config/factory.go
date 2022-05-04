@@ -63,8 +63,9 @@ func (cf *configFactory) getConfigFile() string {
 		return defaultConfigFile
 	}
 
-	return fmt.Sprintf("%s.%s.%s",
-		filepath.Base(defaultConfigFile),
-		cf.appEnv,
-		filepath.Ext(defaultConfigFile))
+	base := strings.Split(filepath.Base(defaultConfigFile), ".")
+	return filepath.Join(
+		filepath.Dir(defaultConfigFile),
+		strings.Join([]string{base[0], cf.appEnv, base[1]}, "."),
+	)
 }
