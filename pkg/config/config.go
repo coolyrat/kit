@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/coolyrat/kit/pkg/config/configcenter"
 	"github.com/knadh/koanf"
 	"github.com/mitchellh/mapstructure"
@@ -20,7 +18,6 @@ func RegisterWatcher(dataID string, cb func()) {
 }
 
 func Unmarshal(path string, v interface{}) error {
-	fmt.Println(conf.String(path))
 	return conf.UnmarshalWithConf(path, v, koanf.UnmarshalConf{
 		Tag:       "yaml",
 		FlatPaths: false,

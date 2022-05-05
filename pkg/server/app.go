@@ -14,16 +14,13 @@ import (
 )
 
 type App struct {
-	context.Context
-
 	http            *http.Server
 	quit            chan os.Signal
 	gracefulTimeout time.Duration
 }
 
-func NewApp(ctx context.Context, e *gin.Engine) *App {
+func NewApp(e *gin.Engine) *App {
 	return &App{
-		Context: ctx,
 
 		http: &http.Server{
 			Addr:    config.GetString(config.PathServerPort),
