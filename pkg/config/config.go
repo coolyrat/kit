@@ -39,5 +39,13 @@ func Print() {
 }
 
 func GetString(path string) string {
-	return conf.String(path)
+	if s := conf.String(path); s != "" {
+		return s
+	}
+
+	if s, ok := defaultConfig[path]; ok {
+		return s.(string)
+	}
+
+	return ""
 }

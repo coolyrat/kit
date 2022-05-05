@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/coolyrat/kit/pkg/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +26,7 @@ func NewApp(ctx context.Context, e *gin.Engine) *App {
 		Context: ctx,
 
 		http: &http.Server{
-			Addr:    ":3000",
+			Addr:    config.GetString(config.PathServerPort),
 			Handler: defaultHandler(e),
 		},
 		quit:            make(chan os.Signal),
