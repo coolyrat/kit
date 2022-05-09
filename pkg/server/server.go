@@ -1,6 +1,8 @@
 package server
 
+import "context"
+
 type Server interface {
-	Start()
-	Stop()
+	Run()
+	AppContext() context.Context
 }

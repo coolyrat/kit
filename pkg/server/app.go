@@ -10,22 +10,22 @@ import (
 	"time"
 
 	"github.com/coolyrat/kit/pkg/config"
-	"github.com/gin-gonic/gin"
+	"github.com/coolyrat/kit/pkg/server/app"
 )
 
 type App struct {
-	context.Context
+	*app.App
 	http            *http.Server
 	quit            chan os.Signal
 	gracefulTimeout time.Duration
 }
 
-func NewApp(ctx context.Context, e *gin.Engine) *App {
+func NewApp(app *app.App, handler http.Handler) *App {
 	return &App{
-		Context: ctx,
+		App: app,
 		http: &http.Server{
 			Addr:    config.GetString(config.PathServerPort),
-			Handler: defaultHandler(e),
+			Handler: handler,
 		},
 		quit:            make(chan os.Signal),
 		gracefulTimeout: config.GetDuration(config.PathGracefulTimeout),
@@ -50,16 +50,19 @@ func (app *App) Run() {
 	app.stop()
 }
 
+func (app *App) AppContext() context.Context {
+	return app.Context
+}
+
 func (app *App) stop() {
 	log.Println("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(app.Context, app.gracefulTimeout)
 	// defer cancel()
-	if err := app.http.Shutdown(ctx); err != nil {
+	if err := app.http.Shutdown(app.Context); err != nil {
 		log.Fatal("Server forced to shutdown: ", err)
 	}
 
 	log.Println("Server stopped...")
-	cancel()
+	app.Stop()
 	time.Sleep(25 * time.Second)
 }

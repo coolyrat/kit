@@ -1,4 +1,4 @@
-package server
+package rest
 
 import "github.com/gin-gonic/gin"
 
@@ -8,7 +8,7 @@ func health(c *gin.Context) {
 	})
 }
 
-func defaultHandler(e *gin.Engine) *gin.Engine {
+func DefaultHandler(e *gin.Engine) *gin.Engine {
 	e.GET("/health", health)
 	return e
 }
