@@ -2,6 +2,7 @@ package configcenter
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/coolyrat/kit/pkg/koanf/providers/nacos"
 	"github.com/knadh/koanf"
@@ -16,6 +17,8 @@ type ConfigCenter interface {
 
 func Init(k *koanf.Koanf) ConfigCenter {
 	if k.Exists(NacosPath) {
+		log.Println("using nacos provider")
+
 		conf := nacos.Config{Koanf: k}
 		if err := k.UnmarshalWithConf(NacosPath, &conf, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
 			panic(fmt.Errorf("failed to unmarshal nacos config: %w", err))
@@ -32,6 +35,7 @@ func Init(k *koanf.Koanf) ConfigCenter {
 		return &configCenter{p}
 	}
 
+	log.Println("using local file config provider")
 	return &configCenter{&noop{}}
 }
 

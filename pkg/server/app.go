@@ -14,20 +14,21 @@ import (
 )
 
 type App struct {
+	context.Context
 	http            *http.Server
 	quit            chan os.Signal
 	gracefulTimeout time.Duration
 }
 
-func NewApp(e *gin.Engine) *App {
+func NewApp(ctx context.Context, e *gin.Engine) *App {
 	return &App{
-
+		Context: ctx,
 		http: &http.Server{
 			Addr:    config.GetString(config.PathServerPort),
 			Handler: defaultHandler(e),
 		},
 		quit:            make(chan os.Signal),
-		gracefulTimeout: time.Second * 20,
+		gracefulTimeout: config.GetDuration(config.PathGracefulTimeout),
 	}
 }
 
@@ -52,11 +53,13 @@ func (app *App) Run() {
 func (app *App) stop() {
 	log.Println("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), app.gracefulTimeout)
-	defer cancel()
+	ctx, cancel := context.WithTimeout(app.Context, app.gracefulTimeout)
+	// defer cancel()
 	if err := app.http.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown: ", err)
 	}
 
 	log.Println("Server stopped...")
+	cancel()
+	time.Sleep(25 * time.Second)
 }

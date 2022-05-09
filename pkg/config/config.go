@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/coolyrat/kit/pkg/config/configcenter"
 	"github.com/knadh/koanf"
@@ -84,4 +85,16 @@ func GetString(path string) string {
 	}
 
 	return ""
+}
+
+func GetDuration(path string) time.Duration {
+	if s := conf.Duration(path); s != time.Duration(0) {
+		return s
+	}
+
+	if s, ok := defaultConfig[path]; ok {
+		return s.(time.Duration)
+	}
+
+	return time.Duration(0)
 }
