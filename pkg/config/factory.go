@@ -36,11 +36,10 @@ func (cf *configFactory) Load() *config {
 
 	// Load config from environment variables
 	cb := func(s string) string {
-		return strings.Replace(strings.ToLower(
-			strings.TrimPrefix(s, env.Prefix)), "_", ".", -1)
+		return strings.Replace(strings.ToLower(s), "_", ".", -1)
 	}
-	if err := k.Load(koanfEnv.Provider(env.Prefix, ".", cb), nil); err != nil {
-		panic(fmt.Errorf("failed to load config env with prefix %s: %w", env.Prefix, err))
+	if err := k.Load(koanfEnv.Provider("", ".", cb), nil); err != nil {
+		panic(fmt.Errorf("failed to load config env: %w", err))
 	}
 
 	// Load config from config center
