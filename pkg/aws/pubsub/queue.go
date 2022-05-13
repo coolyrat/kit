@@ -109,7 +109,7 @@ exit:
 // 	})
 // }
 
-type HandlerFunc func(ctx *Context)
+type HandlerFunc[T any] func(ctx *Context, msg T)
 
 type HandlersChain []HandlerFunc
 
