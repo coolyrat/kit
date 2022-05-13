@@ -3,21 +3,28 @@ module github.com/coolyrat/kit
 go 1.18
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.16.3
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.18.4
+	github.com/davecgh/go-spew v1.1.1
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/imdario/mergo v0.3.12
 	github.com/knadh/koanf v1.4.0
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nacos-group/nacos-sdk-go v1.1.1
+	github.com/panjf2000/ants/v2 v2.5.0
 	go.uber.org/zap v1.21.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.10 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.4 // indirect
+	github.com/aws/smithy-go v1.11.2 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.7.7 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
