@@ -23,6 +23,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.4 // indirect
 	github.com/aws/smithy-go v1.11.2 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/duke-git/lancet v1.2.9 // indirect
+	github.com/duke-git/lancet/v2 v2.0.6 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect

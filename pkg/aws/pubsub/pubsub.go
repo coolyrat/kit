@@ -28,7 +28,9 @@ type QueueSender interface {
 }
 
 type ActionQueueReceiver interface {
-	AddActionHandlers(action string, handlers ...HandlerFunc)
+	ActionHandlers(action string, handlers ...any)
+
+	Receive(ctx context.Context)
 }
 
 type SNSMessageBuilder struct{}

@@ -2,8 +2,10 @@ package kitsqs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -18,25 +20,54 @@ type QueueSubscriber interface {
 	Subscribe(ctx context.Context)
 }
 
+type QueueConfig struct {
+	URL             string
+	WaitTimeSeconds int32
+	IdleWaitTime    time.Duration
+}
+
 type Queue struct {
-	client  *sqs.Client
-	wg      *sync.WaitGroup
-	pool    *ants.Pool
-	actions map[string]HandlersChain
+	Client   *sqs.Client
+	Wg       *sync.WaitGroup
+	Pool     *ants.Pool
+	handlers map[string]HandlerInfo
 
 	URL             string
 	WaitTimeSeconds int32
 	IdleWaitTime    time.Duration
 }
 
-func (q *Queue) Subscribe(ctx context.Context) {
+type HandlerInfo struct {
+	action      string
+	evtTyp      reflect.Type
+	handlerFunc reflect.Value
+}
+
+func (q *Queue) ActionHandlers(action string, handlers ...any) {
+	for _, h := range handlers {
+		handlerTyp := reflect.TypeOf(h)
+		handlerVal := reflect.ValueOf(h)
+		if handlerTyp.Kind() != reflect.Func {
+			panic(fmt.Sprintf("%s is not a function", handlerTyp.String()))
+		}
+
+		evtTyp := handlerTyp.In(1)
+		q.handlers[action] = HandlerInfo{
+			action:      action,
+			evtTyp:      evtTyp,
+			handlerFunc: handlerVal,
+		}
+	}
+}
+
+func (q *Queue) Receive(ctx context.Context) {
 	fmt.Println("Subscribing to queue", q.URL)
 	for {
 		select {
 		case <-ctx.Done():
 			goto exit
 		default:
-			resp, err := q.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+			resp, err := q.Client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String(q.URL),
 				MaxNumberOfMessages: 10,
 				WaitTimeSeconds:     q.WaitTimeSeconds,
@@ -61,6 +92,23 @@ func (q *Queue) Subscribe(ctx context.Context) {
 			}
 
 			for _, msg := range resp.Messages {
+				action, ok := actionMessage(msg.MessageAttributes)
+				if !ok {
+					// handle non-action message
+				}
+
+				handlerInfo, ok := q.handlers[action]
+				if !ok {
+					// handle unknown action
+				}
+
+				evt := reflect.New(handlerInfo.evtTyp).Interface()
+				if err := json.Unmarshal([]byte(*msg.Body), evt); err != nil {
+
+				}
+
+				handlerInfo.handlerFunc.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(evt)})
+
 				// handle message
 				// msg.
 				// var m TopicMessage
@@ -99,22 +147,22 @@ func (q *Queue) Subscribe(ctx context.Context) {
 	}
 exit:
 	fmt.Println(q.URL, " Subscriber stopped")
-	q.wg.Done()
+	q.Wg.Done()
 }
 
 // func (q *Queue) DeleteHandledMsg(receiptHandle *string) error {
-// 	q.client.DeleteMessage(context.Background(), &sqs.DeleteMessageInput{
+// 	q.Client.DeleteMessage(context.Background(), &sqs.DeleteMessageInput{
 // 		QueueUrl:      aws.String(q.URL),
 // 		ReceiptHandle: receiptHandle,
 // 	})
 // }
 
-type HandlerFunc[T any] func(ctx *Context, msg T)
+type HandlerFunc[T any] func(ctx context.Context, msg T)
 
-type HandlersChain []HandlerFunc
+type HandlersChain []HandlerFunc[any]
 
 // Last returns the last handler in the chain. ie. the last handler is the main one.
-func (c HandlersChain) Last() HandlerFunc {
+func (c HandlersChain) Last() HandlerFunc[any] {
 	if length := len(c); length > 0 {
 		return c[length-1]
 	}
